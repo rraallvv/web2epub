@@ -112,6 +112,8 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 
 	BOOL isFirstElement = YES;
 
+	int headerLevel = 0;
+
 	for (GDataXMLElement *node in nodes) {
 
 		GDataXMLElement *lastListElement = nil;
@@ -120,7 +122,7 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 
 		lastListElement = listElement;
 
-		int headerLevel = 0;
+		int listLevel = 0;
 
 		if ([nodeName isEqualToString:@"h1"]) {
 			headerLevel = 1;
@@ -141,11 +143,10 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 			headerLevel = 6;
 
 		} else if ([nodeName isEqualToString:@"li"]) {
-			//NSLog(@"%@", node);
-			continue;
+			listLevel = 1;
 		}
 
-		for (int i = 1; i < headerLevel; i++) {
+		for (int i = 1; i < headerLevel + listLevel; i++) {
 			lastListElement = last(lastListElement);
 		}
 
