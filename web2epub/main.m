@@ -105,9 +105,24 @@ GDataXMLElement *last(GDataXMLElement *element) {
 	return result;
 }
 
-void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *listElement) {
+void parsePage(NSString *filePath, GDataXMLElement *listElement) {
+	NSArray *pathParts = [filePath componentsSeparatedByString:@"#"];
+	NSString *hashTag = nil;
+	if (pathParts.count > 1) {
+		hashTag = [pathParts lastObject];
+	}
+	filePath = [pathParts firstObject];
+
+	GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:filePath] error:NULL];
+	if (!document) {
+		return;
+	}
+	stripDocument(document);
+
+	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:@"//*[contains(@role, 'main')]" namespaces:nil error:nil];
+
 	NSString *path = [filePath stringByDeletingLastPathComponent];
-	NSArray *nodes = [parentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
+	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
 	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
 	BOOL isFirstElement = YES;
@@ -182,11 +197,7 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 				[itemElement addChild:aElement];
     			isFirstElement = NO;
 			} else {
-				GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:linkPath] error:NULL];
-				stripDocument(document);
-				GDataXMLNode *childContentNode = [document.rootElement firstNodeForXPath:@"//*[contains(@role, 'main')]" namespaces:nil error:nil];
-
-				inlineLinks(childContentNode, linkPath, lastListElement);
+				parsePage(linkPath, lastListElement);
 				continue;
 			}
 		} else {
@@ -214,26 +225,19 @@ int main(int argc, const char * argv[]) {
 			exit(1);
 		}
 
-		GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:filePath] error:NULL];
-		if (!document) {
-			exit(1);
-		}
-		stripDocument(document);
-
-		GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:@"//*[contains(@role, 'main')]" namespaces:nil error:nil];
-
 		GDataXMLElement *contentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		inlineLinks(contentNode, filePath, contentsElement);
+		parsePage(filePath, contentsElement);
 
 		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:template error:nil];
 		GDataXMLElement *tableOfContents = (GDataXMLElement *)[templateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
 		[tableOfContents addChild:contentsElement];
 
-		//NSLog(@"title:%@", titleFromElement(contentsElement));
+		/*
 		NSString *title = [[contentNode firstNodeForXPath:@"//title" namespaces:nil error:nil] stringValue];
 		GDataXMLElement *titleElement = (GDataXMLElement *)[[templateElement childAtIndex:0] childAtIndex:0];
 		[titleElement setStringValue:title];
+		 */
 
 		GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:templateElement];
 		NSData *xmlData = contentDocument.XMLData;
