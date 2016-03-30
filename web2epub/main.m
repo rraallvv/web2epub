@@ -116,35 +116,32 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 
 		GDataXMLElement *lastListElement = nil;
 
-		NSString *level = node.name;
+		NSString *nodeName = node.name;
 
 		lastListElement = listElement;
 
-		if ([level isEqualToString:@"h1"]) {
+		int level = 0;
 
-		} else if ([level isEqualToString:@"h2"]) {
-			lastListElement = last(lastListElement);
+		if ([nodeName isEqualToString:@"h1"]) {
+			level = 1;
 
-		} else if ([level isEqualToString:@"h3"]) {
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
+		} else if ([nodeName isEqualToString:@"h2"]) {
+			level = 2;
 
-		} else if ([level isEqualToString:@"h4"]) {
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
+		} else if ([nodeName isEqualToString:@"h3"]) {
+			level = 3;
 
-		} else if ([level isEqualToString:@"h5"]) {
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
+		} else if ([nodeName isEqualToString:@"h4"]) {
+			level = 4;
 
-		} else if ([level isEqualToString:@"h6"]) {
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
-			lastListElement = last(lastListElement);
+		} else if ([nodeName isEqualToString:@"h5"]) {
+			level = 5;
+
+		} else if ([nodeName isEqualToString:@"h6"]) {
+			level = 6;
+		}
+
+		for (int i = 1; i < level; i++) {
 			lastListElement = last(lastListElement);
 		}
 
