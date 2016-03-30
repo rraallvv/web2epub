@@ -6,7 +6,7 @@
 #import <Foundation/Foundation.h>
 #import "GDataXMLNode.h"
 
-NSString *template =
+NSString *navTemplate =
 @"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
 "<!DOCTYPE html><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2011/epub\" lang=\"en\" xml:lang=\"en\">"
 "<head>"
@@ -30,6 +30,16 @@ NSString *template =
 "</body>"
 "</html>";
 
+NSString *pageTemplate =
+@"<?xml version=\"1.0\" encoding=\"utf-8\"?>"
+@"<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
+@"<html xmlns=\"http://www.w3.org/1999/xhtml\">"
+@"<head>"
+@"<title>The title</title>"
+@"<link rel=\"stylesheet\" href=\"../Styles/stylesheet.css\" type=\"text/css\" />"
+@"</head>"
+@"<body></body>"
+@"</html>";
 
 @implementation NSString (JRAdditions)
 
@@ -105,7 +115,19 @@ GDataXMLElement *last(GDataXMLElement *element) {
 	return result;
 }
 
-void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath) {
+/*
+GDataXMLNode *content(NSString *filePath, NSString *xpath) {
+	GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:filePath] error:NULL];
+	if (!document) {
+		exit(1);
+	}
+	stripDocument(document);
+	GDataXMLNode *result = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
+	return result;
+}
+ */
+
+void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath, NSString *outputDir) {
 	NSArray *pathParts = [filePath componentsSeparatedByString:@"#"];
 	NSString *hashTag = nil;
 	if (pathParts.count > 1) {
@@ -120,6 +142,25 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	stripDocument(document);
 
 	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
+
+	GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:pageTemplate error:nil];
+
+	GDataXMLElement *bodyNode = (GDataXMLElement *)[templateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
+	[bodyNode addChild:contentNode];
+
+	GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:templateElement];
+	NSData *xmlData = contentDocument.XMLData;
+
+	static int pageCount = 1;
+
+	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%d.xhtml", pageCount++]];
+	NSLog(@"Saving xml data to %@", resultFilePath);
+
+	if ([xmlData writeToFile:resultFilePath atomically:YES]) {
+		NSLog(@"OK");
+	} else {
+		NSLog(@"Failed");
+	}
 
 	NSString *path = [filePath stringByDeletingLastPathComponent];
 	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
@@ -197,7 +238,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 				[itemElement addChild:aElement];
     			isFirstElement = NO;
 			} else {
-				parsePage(linkPath, lastListElement, xpath);
+				parsePage(linkPath, lastListElement, xpath, outputDir);
 				continue;
 			}
 		} else {
@@ -212,14 +253,20 @@ int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		NSString *filePath = nil;
 		NSString *xpath = @"/html/body";
+		NSString *outputDir = @".";
 
 		for (int i = 0; i < argc; i++) {
 			NSString *argument = [NSString stringWithUTF8String:argv[i]];
 			NSString *extension = [argument pathExtension];
+
 			if ([extension isEqualToString:@"html"]) {
 				filePath = argument;
-			} else if ([argument hasPrefix:@"--xpath"]) {
+
+			} else if ([argument hasPrefix:@"-x"]) {
 				xpath = [NSString stringWithUTF8String:argv[++i]];
+
+			} else if ([argument hasPrefix:@"-o"]) {
+				outputDir = [NSString stringWithUTF8String:argv[++i]];
 			}
 		}
 
@@ -229,9 +276,9 @@ int main(int argc, const char * argv[]) {
 
 		GDataXMLElement *contentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		parsePage(filePath, contentsElement, xpath);
+		parsePage(filePath, contentsElement, xpath, outputDir);
 
-		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:template error:nil];
+		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:navTemplate error:nil];
 		GDataXMLElement *tableOfContents = (GDataXMLElement *)[templateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
 		[tableOfContents addChild:contentsElement];
 
@@ -244,7 +291,7 @@ int main(int argc, const char * argv[]) {
 		GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:templateElement];
 		NSData *xmlData = contentDocument.XMLData;
 
-		NSString *resultFilePath = [[filePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"content.xhtml"];
+		NSString *resultFilePath = [outputDir stringByAppendingPathComponent:@"content.xhtml"];
 		NSLog(@"Saving xml data to %@", resultFilePath);
 
 		if ([xmlData writeToFile:resultFilePath atomically:YES]) {
