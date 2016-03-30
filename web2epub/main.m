@@ -194,40 +194,6 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 		}
 
 		[lastListElement addChild:itemElement];
-
-		/*
-		NSString *href = [[node attributeForName:@"href"] stringValue];
-		NSString *linkText = [node stringValue];
-		NSString *linkPath = [[path stringByAppendingPathComponent:href] stringByStandardizingPath];
-
-		NSLog(@"%@", filePath);
-		if ([[NSFileManager defaultManager] fileExistsAtPath:filePath]) {
-		} else {
-			NSLog(@"!");
-		}
-
-		GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:linkPath] error:NULL];
-		if (!document) {
-			linkPath = [linkPath stringByAppendingPathComponent:@"index.html"];
-			document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:linkPath] error:NULL];
-			if (!document) {
-				//[node removeFromParentNode];
-				continue;
-			}
-		}
-
-		stripDocument(document);
-		id content = [document.rootElement firstNodeForXPath:@"//*[contains(@role, 'main')]" namespaces:nil error:nil];
-		NSLog(@"%@", linkPath);
-		//NSLog(@"%@", content);
-
-		GDataXMLElement *linkElement = [GDataXMLNode elementWithName:@"a" stringValue:linkText];
-		GDataXMLElement *linkAttibute = [GDataXMLNode attributeWithName:@"href" stringValue:linkPath];
-		[linkElement addAttribute:linkAttibute];
-
-		GDataXMLElement *listElement = [GDataXMLNode elementWithName:@"li"];
-		[listElement addChild:linkElement];
-		 */
 	}
 }
 
