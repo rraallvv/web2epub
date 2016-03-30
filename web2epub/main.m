@@ -107,7 +107,7 @@ GDataXMLElement *last(GDataXMLElement *element) {
 
 void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *listElement) {
 	NSString *path = [filePath stringByDeletingLastPathComponent];
-	NSArray *nodes = [parentNode nodesForXPath:@"./*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6]" namespaces:nil error:nil];
+	NSArray *nodes = [parentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
 	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
 	BOOL isFirstElement = YES;
@@ -120,28 +120,32 @@ void inlineLinks(GDataXMLNode *parentNode, NSString *filePath, GDataXMLElement *
 
 		lastListElement = listElement;
 
-		int level = 0;
+		int headerLevel = 0;
 
 		if ([nodeName isEqualToString:@"h1"]) {
-			level = 1;
+			headerLevel = 1;
 
 		} else if ([nodeName isEqualToString:@"h2"]) {
-			level = 2;
+			headerLevel = 2;
 
 		} else if ([nodeName isEqualToString:@"h3"]) {
-			level = 3;
+			headerLevel = 3;
 
 		} else if ([nodeName isEqualToString:@"h4"]) {
-			level = 4;
+			headerLevel = 4;
 
 		} else if ([nodeName isEqualToString:@"h5"]) {
-			level = 5;
+			headerLevel = 5;
 
 		} else if ([nodeName isEqualToString:@"h6"]) {
-			level = 6;
+			headerLevel = 6;
+
+		} else if ([nodeName isEqualToString:@"li"]) {
+			//NSLog(@"%@", node);
+			continue;
 		}
 
-		for (int i = 1; i < level; i++) {
+		for (int i = 1; i < headerLevel; i++) {
 			lastListElement = last(lastListElement);
 		}
 
