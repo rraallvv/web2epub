@@ -211,13 +211,15 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 int main(int argc, const char * argv[]) {
 	@autoreleasepool {
 		NSString *filePath = nil;
+		NSString *xpath = @"/html/body";
 
 		for (int i = 0; i < argc; i++) {
 			NSString *argument = [NSString stringWithUTF8String:argv[i]];
 			NSString *extension = [argument pathExtension];
 			if ([extension isEqualToString:@"html"]) {
 				filePath = argument;
-				break;
+			} else if ([argument hasPrefix:@"--xpath"]) {
+				xpath = [NSString stringWithUTF8String:argv[++i]];
 			}
 		}
 
@@ -227,7 +229,7 @@ int main(int argc, const char * argv[]) {
 
 		GDataXMLElement *contentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		parsePage(filePath, contentsElement, @"//*[contains(@role, 'main')]");
+		parsePage(filePath, contentsElement, xpath);
 
 		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:template error:nil];
 		GDataXMLElement *tableOfContents = (GDataXMLElement *)[templateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
