@@ -153,13 +153,15 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 	static int pageCount = 1;
 
-	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%d.xhtml", pageCount++]];
+	NSString *convertedLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
+
+	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
 	NSLog(@"Saving xml data to %@", resultFilePath);
 
 	if ([xmlData writeToFile:resultFilePath atomically:YES]) {
-		NSLog(@"OK");
+		NSLog(@"...OK");
 	} else {
-		NSLog(@"Failed");
+		NSLog(@"...Failed");
 	}
 
 	NSString *path = [filePath stringByDeletingLastPathComponent];
@@ -232,7 +234,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			if (isFirstElement) {
 				itemElement = [GDataXMLNode elementWithName:@"li"];
 				aElement = [GDataXMLElement elementWithName:@"a"];
-				GDataXMLElement *hrefAttribute = [GDataXMLElement attributeWithName:@"href" stringValue:linkPath];
+				GDataXMLElement *hrefAttribute = [GDataXMLElement attributeWithName:@"href" stringValue:convertedLink];
 				[aElement addAttribute:hrefAttribute];
 				[aElement setStringValue:text];
 				[itemElement addChild:aElement];
@@ -295,9 +297,9 @@ int main(int argc, const char * argv[]) {
 		NSLog(@"Saving xml data to %@", resultFilePath);
 
 		if ([xmlData writeToFile:resultFilePath atomically:YES]) {
-			NSLog(@"OK");
+			NSLog(@"...OK");
 		} else {
-			NSLog(@"Failed");
+			NSLog(@"...Failed");
 		}
 	}
     return 0;
