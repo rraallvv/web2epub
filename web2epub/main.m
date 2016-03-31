@@ -156,29 +156,17 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	}
 	stripDocument(document);
 
-	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
-
-	GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:pageTemplate error:nil];
-
-	GDataXMLElement *bodyNode = (GDataXMLElement *)[templateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
-	[bodyNode addChild:contentNode];
-
+	BOOL isFirstElement = YES;
 	static int pageCount = 1;
 	static int imagesCount = 1;
-
-	NSString *convertedLink = [NSString stringWithFormat:@"Text/%d.xhtml", pageCount++];
-	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
-
-	saveContent(templateElement, resultFilePath);
-
-	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li or self::img]" namespaces:nil error:nil];
-	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
-
-	BOOL isFirstElement = YES;
-
 	int headerLevel = 0;
 
+	NSString *pageLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
 	NSString *path = [filePath stringByDeletingLastPathComponent];
+
+	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
+	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li or self::img]" namespaces:nil error:nil];
+	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
 	for (GDataXMLElement *node in nodes) {
 
@@ -212,15 +200,20 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			listLevel = 1;
 
 		} else if ([nodeName isEqualToString:@"img"]) {
-			NSString *src = [[node attributeForName:@"src"] stringValue];
+			GDataXMLNode *attribute = [node attributeForName:@"src"];
+
+			NSString *src = [attribute stringValue];
+			NSString *srcPath = [[path stringByAppendingPathComponent:src] stringByStandardizingPath];
 			NSString *extension = [src pathExtension];
 
-			NSString *srcPath = [[path stringByAppendingPathComponent:src] stringByStandardizingPath];
-			NSString *srcConvertedLink = [NSString stringWithFormat:@"Images/%d.%@", imagesCount++, extension];
-			NSString *srcConvertedPath = [outputDir stringByAppendingPathComponent:srcConvertedLink];
+			NSString *srcConverted = [NSString stringWithFormat:@"../Images/%d.%@", imagesCount++, extension];
+			NSString *srcConvertedPath = [outputDir stringByAppendingPathComponent:srcConverted];
+
+			[attribute setStringValue:srcConverted];
 
 			NSLog(@"Copying image to %@", srcConvertedPath);
 			NSError *error = nil;
+
 			[[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:srcConvertedPath error:&error];
 			if (!error) {
 				NSLog(@"..OK");
@@ -260,7 +253,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			if (isFirstElement) {
 				itemElement = [GDataXMLNode elementWithName:@"li"];
 				aElement = [GDataXMLElement elementWithName:@"a"];
-				GDataXMLElement *hrefAttribute = [GDataXMLElement attributeWithName:@"href" stringValue:convertedLink];
+				GDataXMLElement *hrefAttribute = [GDataXMLElement attributeWithName:@"href" stringValue:pageLink];
 				[aElement addAttribute:hrefAttribute];
 				[aElement setStringValue:text];
 				[itemElement addChild:aElement];
@@ -275,6 +268,15 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 		[lastListElement addChild:itemElement];
 	}
+
+	NSString *convertedLink = [NSString stringWithFormat:@"Text/%@", pageLink];
+	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
+
+	GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:pageTemplate error:nil];
+	GDataXMLElement *bodyNode = (GDataXMLElement *)[templateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
+	[bodyNode addChild:contentNode];
+
+	saveContent(templateElement, resultFilePath);
 }
 
 int main(int argc, const char * argv[]) {
