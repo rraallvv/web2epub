@@ -259,6 +259,16 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			NSError *error = nil;
 
 			[[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:srcConvertedPath error:&error];
+
+			GDataXMLElement *manifestItem = [GDataXMLElement elementWithName:@"item"];
+			GDataXMLElement *manifestIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:imageFilename];
+			GDataXMLElement *manifestHrefAttribute = [GDataXMLElement elementWithName:@"href" stringValue:imagePath];
+			GDataXMLElement *manifestTypeAttribute = [GDataXMLElement elementWithName:@"media-type" stringValue:[NSString stringWithFormat:@"image/%@", extension]];
+			[manifestItem addAttribute:manifestIdAttribute];
+			[manifestItem addAttribute:manifestHrefAttribute];
+			[manifestItem addAttribute:manifestTypeAttribute];
+			[manifest addChild:manifestItem];
+
 			if (!error) {
 				NSLog(@"..OK");
 			} else {
@@ -329,6 +339,20 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	[bodyNode addChild:contentNode];
 
 	saveContent(templateElement, resultFilePath);
+
+	GDataXMLElement *manifestItem = [GDataXMLElement elementWithName:@"item"];
+	GDataXMLElement *manifestIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:pageLink];
+	GDataXMLElement *manifestHrefAttribute = [GDataXMLElement elementWithName:@"href" stringValue:convertedLink];
+	GDataXMLElement *manifestTypeAttribute = [GDataXMLElement elementWithName:@"media-type" stringValue:@"application/xhtml+xml"];
+	[manifestItem addAttribute:manifestIdAttribute];
+	[manifestItem addAttribute:manifestHrefAttribute];
+	[manifestItem addAttribute:manifestTypeAttribute];
+	[manifest addChild:manifestItem];
+
+	GDataXMLElement *itemrefItem = [GDataXMLElement elementWithName:@"itemref"];
+	GDataXMLElement *itemrefIdAttribute = [GDataXMLElement elementWithName:@"idref" stringValue:pageLink];
+	[itemrefItem addAttribute:itemrefIdAttribute];
+	[spine addChild:itemrefItem];
 }
 
 void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
