@@ -57,6 +57,26 @@ NSString *tocTemplate =
 @"</navMap>"
 @"</ncx>";
 
+NSString *metadataTemplate =
+@"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+@"<package xmlns=\"http://www.idpf.org/2007/opf\" unique-identifier=\"BookID\" version=\"2.0\">"
+@"<metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:opf=\"http://www.idpf.org/2007/opf\">"
+@"<dc:title>Sample .epub eBook</dc:title>"
+@"<dc:language>en</dc:language>"
+@"<dc:rights>Public Domain</dc:rights>"
+@"<dc:creator opf:role=\"aut\">Yoda47</dc:creator>"
+@"<dc:publisher>Jedisaber.com</dc:publisher>"
+@"<dc:identifier id=\"BookID\" opf:scheme=\"UUID\">015ffaec-9340-42f8-b163-a0c5ab7d0611</dc:identifier>"
+@"<meta name=\"Sigil version\" content=\"0.2.4\"/>"
+@"</metadata>"
+@"<manifest>"
+@"<item id=\"ncx\" href=\"toc.ncx\" media-type=\"application/x-dtbncx+xml\"/>"
+@"<item id=\"stylesheet.css\" href=\"Styles/stylesheet.css\" media-type=\"text/css\"/>"
+@"</manifest>"
+@"<spine toc=\"ncx\">"
+@"</spine>"
+@"</package>";
+
 @implementation NSString (JRAdditions)
 
 + (BOOL)isStringEmpty:(NSString *)string {
