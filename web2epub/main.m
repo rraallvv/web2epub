@@ -127,6 +127,21 @@ GDataXMLNode *content(NSString *filePath, NSString *xpath) {
 }
  */
 
+BOOL saveContent(GDataXMLElement *element, NSString *filePath) {
+	GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:element];
+	NSData *xmlData = contentDocument.XMLData;
+
+	NSLog(@"Saving xml data to %@", filePath);
+
+	if ([xmlData writeToFile:filePath atomically:YES]) {
+		NSLog(@"...OK");
+		return YES;
+	}
+
+	NSLog(@"...Failed");
+	return NO;
+}
+
 void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath, NSString *outputDir) {
 	NSArray *pathParts = [filePath componentsSeparatedByString:@"#"];
 	NSString *hashTag = nil;
@@ -148,21 +163,12 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	GDataXMLElement *bodyNode = (GDataXMLElement *)[templateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
 	[bodyNode addChild:contentNode];
 
-	GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:templateElement];
-	NSData *xmlData = contentDocument.XMLData;
-
 	static int pageCount = 1;
 
 	NSString *convertedLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
-
 	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
-	NSLog(@"Saving xml data to %@", resultFilePath);
 
-	if ([xmlData writeToFile:resultFilePath atomically:YES]) {
-		NSLog(@"...OK");
-	} else {
-		NSLog(@"...Failed");
-	}
+	saveContent(templateElement, resultFilePath);
 
 	NSString *path = [filePath stringByDeletingLastPathComponent];
 	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
@@ -290,17 +296,9 @@ int main(int argc, const char * argv[]) {
 		[titleElement setStringValue:title];
 		 */
 
-		GDataXMLDocument *contentDocument = [[GDataXMLDocument alloc] initWithRootElement:templateElement];
-		NSData *xmlData = contentDocument.XMLData;
-
 		NSString *resultFilePath = [outputDir stringByAppendingPathComponent:@"content.xhtml"];
-		NSLog(@"Saving xml data to %@", resultFilePath);
 
-		if ([xmlData writeToFile:resultFilePath atomically:YES]) {
-			NSLog(@"...OK");
-		} else {
-			NSLog(@"...Failed");
-		}
+		saveContent(templateElement, resultFilePath);
 	}
     return 0;
 }
