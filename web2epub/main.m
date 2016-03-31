@@ -214,6 +214,10 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			headerLevel = 6;
 
 		} else if ([nodeName isEqualToString:@"li"]) {
+			GDataXMLElement *aElement = (GDataXMLElement *)[node firstNodeForXPath:@"./a" namespaces:nil error:nil];
+			if (!aElement) {
+				continue;
+			}
 			listLevel = 1;
 
 		} else if ([nodeName isEqualToString:@"img"]) {
