@@ -333,6 +333,9 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
 	NSArray *navChildren = [navElement children];
+
+	static int navNodeCount = 1;
+
 	for (GDataXMLElement *navNode in navChildren) {
 		NSString *tocText = [[navNode firstNodeForXPath:@"./a/text()" namespaces:nil error:nil] stringValue];
 
@@ -340,6 +343,7 @@ void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
 		NSString *tocHref = [NSString stringWithFormat:@"Text/%@", navHref];
 
 		GDataXMLElement *tocNode = [GDataXMLElement elementWithName:@"navPoint"];
+		GDataXMLElement *tocIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:[NSString stringWithFormat:@"navPoint-%d", navNodeCount++]];
 		GDataXMLElement *tocLabel = [GDataXMLElement elementWithName:@"navLabel"];
 		GDataXMLElement *tocContent = [GDataXMLElement elementWithName:@"content"];
 
@@ -349,6 +353,7 @@ void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
 		GDataXMLElement *textElement = [GDataXMLElement elementWithName:@"text" stringValue:tocText];
 		[tocLabel addChild:textElement];
 
+		[tocNode addAttribute:tocIdAttribute];
 		[tocNode addChild:tocLabel];
 		[tocNode addChild:tocContent];
 
