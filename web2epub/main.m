@@ -165,12 +165,11 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 	static int pageCount = 1;
 
-	NSString *convertedLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
+	NSString *convertedLink = [NSString stringWithFormat:@"Text/%d.xhtml", pageCount++];
 	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
 
 	saveContent(templateElement, resultFilePath);
 
-	NSString *path = [filePath stringByDeletingLastPathComponent];
 	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
 	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
@@ -222,6 +221,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 		if (aElement) {
 			NSString *href = [[aElement attributeForName:@"href"] stringValue];
+			NSString *path = [filePath stringByDeletingLastPathComponent];
 			linkPath = [[path stringByAppendingPathComponent:href] stringByStandardizingPath];
 			BOOL isDir = NO;
 			if ([[NSFileManager defaultManager] fileExistsAtPath:linkPath isDirectory:&isDir] && isDir) {
@@ -296,7 +296,7 @@ int main(int argc, const char * argv[]) {
 		[titleElement setStringValue:title];
 		 */
 
-		NSString *resultFilePath = [outputDir stringByAppendingPathComponent:@"content.xhtml"];
+		NSString *resultFilePath = [outputDir stringByAppendingPathComponent:@"Text/content.xhtml"];
 
 		saveContent(templateElement, resultFilePath);
 	}
