@@ -199,7 +199,22 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	NSString *currentLink = nil;
 
 	NSString *pageLink = [NSString stringWithFormat:@"page%d.xhtml", pageCount++];
+	NSString *convertedLink = [NSString stringWithFormat:@"Text/%@", pageLink];
 	NSString *path = [filePath stringByDeletingLastPathComponent];
+
+	GDataXMLElement *manifestItem = [GDataXMLElement elementWithName:@"item"];
+	GDataXMLElement *manifestIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:pageLink];
+	GDataXMLElement *manifestHrefAttribute = [GDataXMLElement elementWithName:@"href" stringValue:convertedLink];
+	GDataXMLElement *manifestTypeAttribute = [GDataXMLElement elementWithName:@"media-type" stringValue:@"application/xhtml+xml"];
+	[manifestItem addAttribute:manifestIdAttribute];
+	[manifestItem addAttribute:manifestHrefAttribute];
+	[manifestItem addAttribute:manifestTypeAttribute];
+	[manifest addChild:manifestItem];
+
+	GDataXMLElement *itemrefItem = [GDataXMLElement elementWithName:@"itemref"];
+	GDataXMLElement *itemrefIdAttribute = [GDataXMLElement elementWithName:@"idref" stringValue:pageLink];
+	[itemrefItem addAttribute:itemrefIdAttribute];
+	[spine addChild:itemrefItem];
 
 	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
 	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li or self::img]" namespaces:nil error:nil];
@@ -331,7 +346,6 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 		[lastListElement addChild:itemElement];
 	}
 
-	NSString *convertedLink = [NSString stringWithFormat:@"Text/%@", pageLink];
 	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
 
 	GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:pageTemplate error:nil];
@@ -339,20 +353,6 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	[bodyNode addChild:contentNode];
 
 	saveContent(templateElement, resultFilePath);
-
-	GDataXMLElement *manifestItem = [GDataXMLElement elementWithName:@"item"];
-	GDataXMLElement *manifestIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:pageLink];
-	GDataXMLElement *manifestHrefAttribute = [GDataXMLElement elementWithName:@"href" stringValue:convertedLink];
-	GDataXMLElement *manifestTypeAttribute = [GDataXMLElement elementWithName:@"media-type" stringValue:@"application/xhtml+xml"];
-	[manifestItem addAttribute:manifestIdAttribute];
-	[manifestItem addAttribute:manifestHrefAttribute];
-	[manifestItem addAttribute:manifestTypeAttribute];
-	[manifest addChild:manifestItem];
-
-	GDataXMLElement *itemrefItem = [GDataXMLElement elementWithName:@"itemref"];
-	GDataXMLElement *itemrefIdAttribute = [GDataXMLElement elementWithName:@"idref" stringValue:pageLink];
-	[itemrefItem addAttribute:itemrefIdAttribute];
-	[spine addChild:itemrefItem];
 }
 
 void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
