@@ -178,7 +178,7 @@ BOOL saveContent(GDataXMLElement *element, NSString *filePath) {
 	return NO;
 }
 
-void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath, NSString *outputDir) {
+void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath, NSString *outputDir, GDataXMLElement *manifest, GDataXMLElement *spine) {
 	NSArray *pathParts = [filePath componentsSeparatedByString:@"#"];
 	NSString *hashTag = nil;
 	if (pathParts.count > 1) {
@@ -300,7 +300,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 				[itemElement addChild:aElement];
     			isFirstElement = NO;
 			} else {
-				parsePage(linkPath, lastListElement, xpath, outputDir);
+				parsePage(linkPath, lastListElement, xpath, outputDir, manifest, spine);
 				continue;
 			}
 
@@ -384,11 +384,15 @@ int main(int argc, const char * argv[]) {
 			exit(1);
 		}
 
+		GDataXMLElement *metadataTemplateElement = [[GDataXMLElement alloc] initWithXMLString:metadataTemplate error:nil];
+		GDataXMLElement *manifestContents = (GDataXMLElement *)[metadataTemplateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
+		GDataXMLElement *spineContents = (GDataXMLElement *)[metadataTemplateElement firstNodeForXPath:@"*[3]" namespaces:nil error:nil];
+
 		NSString *OEBPSDir = [outputDir stringByAppendingPathComponent:@"OEBPS"];
 
 		GDataXMLElement *navContentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		parsePage(filePath, navContentsElement, xpath, OEBPSDir);
+		parsePage(filePath, navContentsElement, xpath, OEBPSDir, manifestContents, spineContents);
 
 		GDataXMLElement *navTemplateElement = [[GDataXMLElement alloc] initWithXMLString:navTemplate error:nil];
 		GDataXMLElement *navContents = (GDataXMLElement *)[navTemplateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
@@ -401,8 +405,10 @@ int main(int argc, const char * argv[]) {
 		 */
 
 		NSString *navFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/nav.xhtml"];
-
 		saveContent(navTemplateElement, navFilePath);
+
+		NSString *metadataFilePath = [OEBPSDir stringByAppendingPathComponent:@"content.opf"];
+		saveContent(metadataTemplateElement, metadataFilePath);
 
 		GDataXMLElement *tocTemplateElement = [[GDataXMLElement alloc] initWithXMLString:tocTemplate error:nil];
 		GDataXMLElement *tocContents = (GDataXMLElement *)[tocTemplateElement firstNodeForXPath:@"*[3]" namespaces:nil error:nil];
@@ -410,7 +416,6 @@ int main(int argc, const char * argv[]) {
 		buildNavPoints(navContentsElement, tocContents);
 
 		NSString *tocFilePath = [OEBPSDir stringByAppendingPathComponent:@"toc.ncx"];
-
 		saveContent(tocTemplateElement, tocFilePath);;
 	}
     return 0;
