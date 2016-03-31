@@ -176,6 +176,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	static int pageCount = 1;
 	static int imagesCount = 1;
 	int headerLevel = 0;
+	NSString *currentLink = nil;
 
 	NSString *pageLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
 	NSString *path = [filePath stringByDeletingLastPathComponent];
@@ -278,8 +279,16 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 				parsePage(linkPath, lastListElement, xpath, outputDir);
 				continue;
 			}
+
+			currentLink = linkPath;
+
 		} else {
-			itemElement = [GDataXMLNode elementWithName:@"li" stringValue:text];
+			itemElement = [GDataXMLNode elementWithName:@"li"];
+			aElement = [GDataXMLElement elementWithName:@"a"];
+			GDataXMLElement *hrefAttribute = [GDataXMLElement attributeWithName:@"href" stringValue:pageLink];
+			[aElement addAttribute:hrefAttribute];
+			[aElement setStringValue:text];
+			[itemElement addChild:aElement];
 		}
 
 		[lastListElement addChild:itemElement];
@@ -293,6 +302,37 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	[bodyNode addChild:contentNode];
 
 	saveContent(templateElement, resultFilePath);
+}
+
+void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
+	NSArray *navChildren = [navElement children];
+	for (GDataXMLElement *navNode in navChildren) {
+		NSString *tocText = [[navNode firstNodeForXPath:@"./a/text()" namespaces:nil error:nil] stringValue];
+
+		NSString *navHref = [[navNode firstNodeForXPath:@"./a/@href" namespaces:nil error:nil] stringValue];
+		NSString *tocHref = [NSString stringWithFormat:@"Text/%@", navHref];
+
+		GDataXMLElement *tocNode = [GDataXMLElement elementWithName:@"navPoint"];
+		GDataXMLElement *tocLabel = [GDataXMLElement elementWithName:@"navLabel"];
+		GDataXMLElement *tocContent = [GDataXMLElement elementWithName:@"content"];
+
+		GDataXMLElement *srcAttribute = [GDataXMLElement elementWithName:@"src" stringValue:tocHref];
+		[tocContent addAttribute:srcAttribute];
+
+		GDataXMLElement *textElement = [GDataXMLElement elementWithName:@"text" stringValue:tocText];
+		[tocLabel addChild:textElement];
+
+		[tocNode addChild:tocLabel];
+		[tocNode addChild:tocContent];
+
+		GDataXMLElement *listElement = (GDataXMLElement *)[navNode firstNodeForXPath:@"./ol" namespaces:nil error:nil];
+
+		if (listElement) {
+			buildNavPoints(listElement, tocNode);
+		}
+
+		[tocElement addChild:tocNode];
+	}
 }
 
 int main(int argc, const char * argv[]) {
@@ -336,9 +376,18 @@ int main(int argc, const char * argv[]) {
 		[titleElement setStringValue:title];
 		 */
 
-		NSString *resultFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/nav.xhtml"];
+		NSString *navFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/nav.xhtml"];
 
-		saveContent(navTemplateElement, resultFilePath);
+		saveContent(navTemplateElement, navFilePath);
+
+		GDataXMLElement *tocTemplateElement = [[GDataXMLElement alloc] initWithXMLString:tocTemplate error:nil];
+		GDataXMLElement *tocContents = (GDataXMLElement *)[tocTemplateElement firstNodeForXPath:@"*[3]" namespaces:nil error:nil];
+
+		buildNavPoints(navContentsElement, tocContents);
+
+		NSString *tocFilePath = [OEBPSDir stringByAppendingPathComponent:@"toc.ncx"];
+
+		saveContent(tocTemplateElement, tocFilePath);;
 	}
     return 0;
 }
