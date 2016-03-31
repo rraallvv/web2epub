@@ -322,13 +322,13 @@ int main(int argc, const char * argv[]) {
 
 		NSString *OEBPSDir = [outputDir stringByAppendingPathComponent:@"OEBPS"];
 
-		GDataXMLElement *contentsElement = [GDataXMLNode elementWithName:@"ol"];
+		GDataXMLElement *navContentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		parsePage(filePath, contentsElement, xpath, OEBPSDir);
+		parsePage(filePath, navContentsElement, xpath, OEBPSDir);
 
-		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:navTemplate error:nil];
-		GDataXMLElement *tableOfContents = (GDataXMLElement *)[templateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
-		[tableOfContents addChild:contentsElement];
+		GDataXMLElement *navTemplateElement = [[GDataXMLElement alloc] initWithXMLString:navTemplate error:nil];
+		GDataXMLElement *navContents = (GDataXMLElement *)[navTemplateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
+		[navContents addChild:navContentsElement];
 
 		/*
 		NSString *title = [[contentNode firstNodeForXPath:@"//title" namespaces:nil error:nil] stringValue];
@@ -336,9 +336,9 @@ int main(int argc, const char * argv[]) {
 		[titleElement setStringValue:title];
 		 */
 
-		NSString *resultFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/content.xhtml"];
+		NSString *resultFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/nav.xhtml"];
 
-		saveContent(templateElement, resultFilePath);
+		saveContent(navTemplateElement, resultFilePath);
 	}
     return 0;
 }
