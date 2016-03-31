@@ -198,7 +198,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	int headerLevel = 0;
 	NSString *currentLink = nil;
 
-	NSString *pageLink = [NSString stringWithFormat:@"%d.xhtml", pageCount++];
+	NSString *pageLink = [NSString stringWithFormat:@"page%d.xhtml", pageCount++];
 	NSString *path = [filePath stringByDeletingLastPathComponent];
 
 	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
@@ -247,7 +247,10 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			NSString *srcPath = [[path stringByAppendingPathComponent:src] stringByStandardizingPath];
 			NSString *extension = [src pathExtension];
 
-			NSString *srcConverted = [NSString stringWithFormat:@"../Images/%d.%@", imagesCount++, extension];
+			NSString *imageFilename = [NSString stringWithFormat:@"image%d.%@", imagesCount++, extension];
+			NSString *imagePath = [NSString stringWithFormat:@"Images/%@", imageFilename];
+
+			NSString *srcConverted = [NSString stringWithFormat:@"../%@", imagePath];
 			NSString *srcConvertedPath = [[outputDir stringByAppendingPathComponent:[NSString stringWithFormat:@"Text/%@", srcConverted]] stringByStandardizingPath];
 
 			[attribute setStringValue:srcConverted];
