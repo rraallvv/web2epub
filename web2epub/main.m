@@ -207,7 +207,7 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 			NSString *extension = [src pathExtension];
 
 			NSString *srcConverted = [NSString stringWithFormat:@"../Images/%d.%@", imagesCount++, extension];
-			NSString *srcConvertedPath = [outputDir stringByAppendingPathComponent:srcConverted];
+			NSString *srcConvertedPath = [[outputDir stringByAppendingPathComponent:[NSString stringWithFormat:@"Text/%@", srcConverted]] stringByStandardizingPath];
 
 			[attribute setStringValue:srcConverted];
 
@@ -304,9 +304,11 @@ int main(int argc, const char * argv[]) {
 			exit(1);
 		}
 
+		NSString *OEBPSDir = [outputDir stringByAppendingPathComponent:@"OEBPS"];
+
 		GDataXMLElement *contentsElement = [GDataXMLNode elementWithName:@"ol"];
 
-		parsePage(filePath, contentsElement, xpath, outputDir);
+		parsePage(filePath, contentsElement, xpath, OEBPSDir);
 
 		GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:navTemplate error:nil];
 		GDataXMLElement *tableOfContents = (GDataXMLElement *)[templateElement firstNodeForXPath:@"//*[@id='toc']" namespaces:nil error:nil];
@@ -318,7 +320,7 @@ int main(int argc, const char * argv[]) {
 		[titleElement setStringValue:title];
 		 */
 
-		NSString *resultFilePath = [outputDir stringByAppendingPathComponent:@"Text/content.xhtml"];
+		NSString *resultFilePath = [OEBPSDir stringByAppendingPathComponent:@"Text/content.xhtml"];
 
 		saveContent(templateElement, resultFilePath);
 	}
