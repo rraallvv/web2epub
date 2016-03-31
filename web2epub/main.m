@@ -19,9 +19,9 @@ NSString *navTemplate =
 "<nav epub:type=\"landmarks\" id=\"landmarks\" hidden=\"\">"
 "<h2>Guide</h2>"
 "<ol>"
-"<li><a epub:type=\"bodymatter\" href=\"part0003.xhtml\">Start Here</a></li>"
-"<li><a epub:type=\"toc\" href=\"part0001.xhtml\">Table of Contents</a></li>"
-"<li><a epub:type=\"cover\" href=\"cover_page.xhtml\">Cover</a></li>"
+"<li><a epub:type=\"bodymatter\" href=\"page1.xhtml\">Start Here</a></li>"
+"<li><a epub:type=\"toc\" href=\"nav.xhtml\">Table of Contents</a></li>"
+"<li><a epub:type=\"cover\" href=\"cover.xhtml\">Cover</a></li>"
 "</ol>"
 "</nav>"
 "<nav epub:type=\"toc\" id=\"toc\">"
@@ -367,7 +367,9 @@ void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
 		NSString *tocHref = [NSString stringWithFormat:@"Text/%@", navHref];
 
 		GDataXMLElement *tocNode = [GDataXMLElement elementWithName:@"navPoint"];
-		GDataXMLElement *tocIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:[NSString stringWithFormat:@"navPoint-%d", navNodeCount++]];
+		GDataXMLElement *tocIdAttribute = [GDataXMLElement elementWithName:@"id" stringValue:[NSString stringWithFormat:@"navPoint-%d", navNodeCount]];
+		GDataXMLElement *tocOrderAttribute = [GDataXMLElement elementWithName:@"playOrder" stringValue:[NSString stringWithFormat:@"%d", navNodeCount]];
+		navNodeCount++;
 		GDataXMLElement *tocLabel = [GDataXMLElement elementWithName:@"navLabel"];
 		GDataXMLElement *tocContent = [GDataXMLElement elementWithName:@"content"];
 
@@ -378,6 +380,7 @@ void buildNavPoints(GDataXMLElement *navElement, GDataXMLElement *tocElement) {
 		[tocLabel addChild:textElement];
 
 		[tocNode addAttribute:tocIdAttribute];
+		[tocNode addAttribute:tocOrderAttribute];
 		[tocNode addChild:tocLabel];
 		[tocNode addChild:tocContent];
 
