@@ -164,18 +164,21 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	[bodyNode addChild:contentNode];
 
 	static int pageCount = 1;
+	static int imagesCount = 1;
 
 	NSString *convertedLink = [NSString stringWithFormat:@"Text/%d.xhtml", pageCount++];
 	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
 
 	saveContent(templateElement, resultFilePath);
 
-	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li]" namespaces:nil error:nil];
+	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li or self::img]" namespaces:nil error:nil];
 	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
 	BOOL isFirstElement = YES;
 
 	int headerLevel = 0;
+
+	NSString *path = [filePath stringByDeletingLastPathComponent];
 
 	for (GDataXMLElement *node in nodes) {
 
@@ -207,6 +210,24 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 		} else if ([nodeName isEqualToString:@"li"]) {
 			listLevel = 1;
+
+		} else if ([nodeName isEqualToString:@"img"]) {
+			NSString *src = [[node attributeForName:@"src"] stringValue];
+			NSString *extension = [src pathExtension];
+
+			NSString *srcPath = [[path stringByAppendingPathComponent:src] stringByStandardizingPath];
+			NSString *srcConvertedLink = [NSString stringWithFormat:@"Images/%d.%@", imagesCount++, extension];
+			NSString *srcConvertedPath = [outputDir stringByAppendingPathComponent:srcConvertedLink];
+
+			NSLog(@"Copying image to %@", srcConvertedPath);
+			NSError *error = nil;
+			[[NSFileManager defaultManager] copyItemAtPath:srcPath toPath:srcConvertedPath error:&error];
+			if (!error) {
+				NSLog(@"..OK");
+			} else {
+				NSLog(@"...Error: %@", error.localizedDescription);
+			}
+			continue;
 		}
 
 		for (int i = 1; i < headerLevel + listLevel; i++) {
@@ -215,13 +236,12 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 
 		NSString *text = [[node stringValue] stringByTrimmingLeadingWhitespace];
 
-		GDataXMLElement *aElement = (GDataXMLElement *)[node  firstNodeForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
+		GDataXMLElement *aElement = (GDataXMLElement *)[node firstNodeForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
 		NSString *linkPath = nil;
 
 		if (aElement) {
 			NSString *href = [[aElement attributeForName:@"href"] stringValue];
-			NSString *path = [filePath stringByDeletingLastPathComponent];
 			linkPath = [[path stringByAppendingPathComponent:href] stringByStandardizingPath];
 			BOOL isDir = NO;
 			if ([[NSFileManager defaultManager] fileExistsAtPath:linkPath isDirectory:&isDir] && isDir) {
