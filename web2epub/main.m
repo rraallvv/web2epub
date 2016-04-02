@@ -346,6 +346,68 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 		[lastListElement addChild:itemElement];
 	}
 
+	for (GDataXMLElement *node in nodes) {
+		GDataXMLElement *aElement = (GDataXMLElement *)[node firstNodeForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
+		if (aElement) {
+			GDataXMLElement *parent = (GDataXMLElement *)[node firstNodeForXPath:@"parent::node()" namespaces:nil error:nil];
+			[parent removeChild:node];
+		}
+	}
+
+	int prevHeaderLevel = -1;
+	nodes = [contentNode children];
+	NSMutableArray *headersToRemove = [NSMutableArray array];
+	id lastHeaderElement = nil;
+	for (GDataXMLElement *node in nodes) {
+		NSString *nodeName = node.name;
+
+		if ([nodeName isEqualToString:@"h1"]) {
+			headerLevel = 1;
+
+		} else if ([nodeName isEqualToString:@"h2"]) {
+			headerLevel = 2;
+
+		} else if ([nodeName isEqualToString:@"h3"]) {
+			headerLevel = 3;
+
+		} else if ([nodeName isEqualToString:@"h4"]) {
+			headerLevel = 4;
+
+		} else if ([nodeName isEqualToString:@"h5"]) {
+			headerLevel = 5;
+
+		} else if ([nodeName isEqualToString:@"h6"]) {
+			headerLevel = 6;
+
+		} else if ([nodeName isEqualToString:@"text"] && [[node stringValue] isStringEmpty]) {
+			[headersToRemove addObject:node];
+			continue;
+
+		} else {
+			headerLevel = -1;
+			continue;
+		}
+
+		if (headerLevel != -1) {
+			if (headerLevel == prevHeaderLevel) {
+				[headersToRemove addObject:lastHeaderElement];
+			}
+		}
+
+		lastHeaderElement = node;
+
+		prevHeaderLevel = headerLevel;
+	}
+
+	if (headerLevel != -1) {
+		[headersToRemove addObject:lastHeaderElement];
+	}
+
+	for (GDataXMLElement *node in headersToRemove) {
+		GDataXMLElement *parent = (GDataXMLElement *)[node firstNodeForXPath:@"parent::node()" namespaces:nil error:nil];
+		[parent removeChild:node];
+	}
+
 	NSString *resultFilePath = [outputDir stringByAppendingPathComponent:convertedLink];
 
 	GDataXMLElement *templateElement = [[GDataXMLElement alloc] initWithXMLString:pageTemplate error:nil];
