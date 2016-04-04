@@ -190,7 +190,13 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	if (!document) {
 		return;
 	}
+    
 	stripDocument(document);
+    
+    GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
+    if (!contentNode) {
+        return;
+    }
 
 	BOOL isFirstElement = YES;
 	static int pageCount = 1;
@@ -216,7 +222,6 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	[itemrefItem addAttribute:itemrefIdAttribute];
 	[spine addChild:itemrefItem];
 
-	GDataXMLNode *contentNode = [document.rootElement firstNodeForXPath:xpath namespaces:nil error:nil];
 	NSArray *nodes = [contentNode nodesForXPath:@".//*[self::h1 or self::h2 or self::h3 or self::h4 or self::h5 or self::h6 or self::li or self::img]" namespaces:nil error:nil];
 	//NSArray *nodes = [parentNode nodesForXPath:@".//a[not(starts-with(@href, 'http'))]" namespaces:nil error:nil];
 
@@ -470,12 +475,11 @@ int main(int argc, const char * argv[]) {
 
 		for (int i = 0; i < argc; i++) {
 			NSString *argument = [NSString stringWithUTF8String:argv[i]];
-			NSString *extension = [argument pathExtension];
 
-			if ([extension isEqualToString:@"html"]) {
-				filePath = argument;
-
-			} else if ([argument hasPrefix:@"-x"]) {
+            if ([argument hasPrefix:@"-i"]) {
+                filePath = [NSString stringWithUTF8String:argv[++i]];
+                
+            } else if ([argument hasPrefix:@"-x"]) {
 				xpath = [NSString stringWithUTF8String:argv[++i]];
 
 			} else if ([argument hasPrefix:@"-o"]) {
