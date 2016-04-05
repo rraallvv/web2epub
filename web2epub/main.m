@@ -77,6 +77,8 @@ NSString *metadataTemplate =
 @"</spine>"
 @"</package>";
 
+NSMutableSet *parsedPages = nil;
+
 @implementation NSString (JRAdditions)
 
 + (BOOL)isStringEmpty:(NSString *)string {
@@ -185,6 +187,13 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 		hashTag = [pathParts lastObject];
 	}
 	filePath = [pathParts firstObject];
+    
+    if ([parsedPages containsObject:filePath]) {
+        NSLog(@"Skipping file: '%@'", filePath);
+        return;
+    }
+    
+    [parsedPages addObject:filePath];
 
 	GDataXMLDocument *document = [[GDataXMLDocument alloc] initWithHTMLData:[NSData dataWithContentsOfFile:filePath] error:NULL];
 	if (!document) {
@@ -490,6 +499,8 @@ int main(int argc, const char * argv[]) {
 		if (!filePath) {
 			exit(1);
 		}
+        
+        parsedPages = [NSMutableSet set];
 
 		GDataXMLElement *metadataTemplateElement = [[GDataXMLElement alloc] initWithXMLString:metadataTemplate error:nil];
 		GDataXMLElement *manifestContents = (GDataXMLElement *)[metadataTemplateElement firstNodeForXPath:@"*[2]" namespaces:nil error:nil];
