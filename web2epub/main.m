@@ -375,6 +375,10 @@ void parsePage(NSString *filePath, GDataXMLElement *listElement, NSString *xpath
 	BOOL finishedPage = NO;
 	for (GDataXMLElement *node in nodes) {
 		NSString *nodeName = node.name;
+		
+		if ([nodeName isEqualToString:@"div"]) {
+			nodeName = [node firstNodeForXPath:@"./*" error:nil].name;
+		}
 
 		if (finishedPage || [nodeName isEqualToString:@"hr"]) {
 			[headersToRemove addObject:node];
